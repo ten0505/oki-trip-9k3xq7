@@ -1052,8 +1052,14 @@ function importJSON(e){
   e.target.value='';
 }
 
-/* ---------- 初期データ（隠岐出張 6/30）：データが空のときだけ自動投入 ---------- */
+/* ---------- 初期データ（隠岐出張 6/27・6/30）：HTMLに焼き込み（消えない） ---------- */
 const SEED=[
+  {id:'oki0627-01',type:'transport',title:'JAL277 羽田→出雲',date:'2026-06-27',start:'07:10',end:'08:30',
+    mode:'飛行機',flight:'JAL277',from:'東京(羽田)',to:'出雲',resv:'予約済',seat:'クラスJ（指定済み）',
+    memo:'運賃:フレックス乗継／購入済み'},
+  {id:'oki0627-02',type:'transport',title:'JAL3433 出雲→隠岐',date:'2026-06-27',start:'09:00',end:'09:30',
+    mode:'飛行機',flight:'JAL3433',from:'出雲',to:'隠岐',resv:'予約済',seat:'普通席（未指定）',
+    memo:'運賃:フレックス乗継／購入済み'},
   {id:'oki0630-01',type:'transport',title:'高速船 菱浦→西郷港',date:'2026-06-30',start:'08:14',end:'08:45',
     mode:'高速船',from:'菱浦港',to:'西郷港',resv:'手配中',memo:''},
   {id:'oki0630-02',type:'transport',title:'レンタカー 隠岐島内案内（一部）',date:'2026-06-30',start:'09:00',end:'11:30',
@@ -1069,6 +1075,9 @@ const SEED=[
     mode:'フェリー',from:'西郷港',to:'七類港',resv:'手配中',memo:''},
   {id:'oki0630-07',type:'transport',title:'タクシー 七類港→米子空港',date:'2026-06-30',start:'18:05',end:'',
     mode:'タクシー／車',from:'七類港',to:'米子空港',memo:'七類港からタクシーで米子空港へ移動'},
+  {id:'oki0630-08',type:'transport',title:'NH390 米子→羽田',date:'2026-06-30',start:'20:05',end:'21:30',
+    mode:'飛行機',flight:'NH390(ANA)',from:'米子',to:'東京(羽田) ターミナル2',resv:'予約済',seat:'28A',
+    memo:'運賃:スタンダード／エコノミークラス／機種A321／予約状況:確定'},
 ];
 
 // 起動：まず初期データを描画 → その後 保存データを読み込んで反映
