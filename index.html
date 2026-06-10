@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>隠岐出張スケジュール</title>
+<style>
+  :root{
+    --c-meeting:#1565c0; --c-transport:#00897b; --c-meal:#ef6c00;
+    --c-sight:#7b1fa2; --c-hotel:#c2185b; --c-other:#546e7a;
+    --bg:#f4f6f8; --line:#dfe3e8; --txt:#1f2933;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:"Segoe UI","Hiragino Kaku Gothic ProN","Meiryo",sans-serif;
+    background:var(--bg);color:var(--txt);font-size:14px;}
+  header{background:#0d3b66;color:#fff;padding:10px 16px;display:flex;align-items:center;
+    gap:12px;flex-wrap:wrap;position:sticky;top:0;z-index:20;}
+  header h1{font-size:18px;margin:0;font-weight:600;}
+  header .spacer{flex:1;}
+  button{cursor:pointer;border:none;border-radius:6px;padding:7px 12px;font-size:13px;
+    background:#1976d2;color:#fff;}
+  button.sec{background:#e0e6ed;color:#1f2933;}
+  button.ghost{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.5);}
+  button:hover{filter:brightness(1.08);}
+  .tabs{display:flex;gap:4px;padding:8px 16px;background:#fff;border-bottom:1px solid var(--line);
+    position:sticky;top:48px;z-index:19;flex-wrap:wrap;}
+  .tabs button{background:#eef1f5;color:#445;}
+  .tabs button.active{background:#0d3b66;color:#fff;}
+  main{padding:16px;}
+  /* ---- timetable ---- */
+  .tt-wrap{overflow:auto;background:#fff;border:1px solid var(--line);border-radius:8px;}
+  table.tt{border-collapse:collapse;min-width:100%;}
+  table.tt th,table.tt td{border:1px solid var(--line);vertical-align:top;}
+  table.tt thead th{background:#0d3b66;color:#fff;padding:8px 10px;position:sticky;top:0;
+    text-align:center;font-weight:600;white-space:nowrap;}
+  table.tt thead th.weekend{background:#7a2f3a;}
+  table.tt .timecol{background:#f0f3f7;color:#667;text-align:center;width:54px;min-width:54px;
+    font-variant-numeric:tabular-nums;position:sticky;left:0;z-index:5;padding:2px 4px;}
+  table.tt td.slot{height:38px;min-width:150px;width:150px;padding:2px;position:relative;}
+  table.tt thead th.timecol{left:0;z-index:8;}
+  .ev{border-radius:5px;padding:3px 6px;color:#fff;font-size:12px;line-height:1.3;margin:1px 0;
+    cursor:pointer;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.18);}
+  .ev .t{font-weight:600;}
+  .ev .m{opacity:.92;font-size:11px;}
+  .badge{display:inline-block;font-size:10px;padding:0 4px;border-radius:3px;
+    background:rgba(255,255,255,.28);margin-left:4px;}
+  /* ---- day view ---- */
+  .day-nav{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+  .day-nav h2{margin:0;font-size:17px;}
+  .timeline{position:relative;}
+  .day-card{display:flex;gap:10px;background:#fff;border:1px solid var(--line);
+    border-left-width:5px;border-radius:8px;padding:10px 12px;margin-bottom:8px;}
+  .day-card .time{min-width:96px;font-variant-numeric:tabular-nums;color:#445;font-weight:600;}
+  .day-card .body{flex:1;}
+  .day-card .ttl{font-weight:600;font-size:15px;}
+  .day-card .typ{display:inline-block;font-size:11px;color:#fff;border-radius:4px;
+    padding:1px 7px;margin-right:6px;vertical-align:1px;}
+  .day-card .det{color:#52606d;margin-top:3px;font-size:13px;}
+  .day-card .det span{margin-right:14px;white-space:nowrap;}
+  .day-card .acts{display:flex;flex-direction:column;gap:4px;}
+  .day-card .acts button{padding:3px 8px;font-size:12px;}
+  .empty{color:#90a4ae;text-align:center;padding:40px;}
+  /* ---- calendar (bar) timetable ---- */
+  .cal{display:inline-flex;min-width:100%;background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+  .cal-axis{flex:0 0 54px;}
+  .cal-axis .ah{height:54px;text-align:right;padding-right:6px;font-size:11px;color:#90a4ae;
+    border-top:1px solid var(--line);box-sizing:border-box;}
+  .cal-col{flex:1 0 160px;min-width:160px;border-left:1px solid var(--line);}
+  .cal-colhead{height:34px;line-height:34px;text-align:center;font-weight:600;color:#fff;
+    background:#0d3b66;font-size:13px;white-space:nowrap;position:sticky;top:0;}
+  .cal-colhead.weekend{background:#7a2f3a;}
+  .cal-allday{border-top:1px solid var(--line);background:#fafbfc;padding:2px;min-height:6px;}
+  .cal-allday .ev{margin:2px;}
+  .cal-grid{position:relative;}
+  .cal-grid .hline{position:absolute;left:0;right:0;border-top:1px solid var(--line);}
+  .cal-ev{position:absolute;border-radius:5px;color:#fff;font-size:11px;line-height:1.25;
+    padding:2px 5px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.2);cursor:pointer;box-sizing:border-box;}
+  .cal-ev .t{font-weight:600;}
+  .cal-headrow{display:inline-flex;min-width:100%;}
+  .cal-headrow .ax{flex:0 0 54px;background:#0d3b66;}
+  .cal-headrow .cal-colhead{border-left:1px solid rgba(255,255,255,.15);}
+  .axhdr{height:34px;}
+  /* ---- modal ---- */
+  .overlay{position:fixed;inset:0;background:rgba(15,30,50,.55);display:none;
+    align-items:flex-start;justify-content:center;z-index:50;overflow:auto;padding:24px;}
+  .overlay.open{display:flex;}
+  .modal{background:#fff;border-radius:10px;width:560px;max-width:100%;padding:18px 20px;
+    box-shadow:0 12px 40px rgba(0,0,0,.3);}
+  .modal h3{margin:0 0 12px;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;}
+  .grid .full{grid-column:1/3;}
+  label{display:block;font-size:12px;color:#52606d;margin-bottom:3px;}
+  input,select,textarea{width:100%;padding:7px 8px;border:1px solid #cbd2d9;border-radius:6px;
+    font-size:13px;font-family:inherit;}
+  textarea{resize:vertical;min-height:54px;}
+  .modal-foot{display:flex;gap:8px;margin-top:16px;justify-content:flex-end;}
+  .modal-foot .del{margin-right:auto;background:#c62828;}
+  .typefields{display:none;}
+  .typefields.on{display:block;}
+  .typefields.full.on{grid-column:1/3;}
+  /* ---- pdf panel ---- */
+  .pdf-zone{border:2px dashed #90a4ae;border-radius:8px;padding:20px;text-align:center;
+    color:#607d8b;background:#fff;margin-bottom:12px;}
+  .pdf-zone.drag{background:#e3f2fd;border-color:#1976d2;}
+  .pdf-text{width:100%;min-height:240px;font-family:Consolas,monospace;font-size:12px;
+    border:1px solid var(--line);border-radius:8px;padding:10px;white-space:pre-wrap;}
+  .hint{color:#78909c;font-size:12px;margin:6px 0 14px;}
+  .legend{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;font-size:12px;}
+  .legend span{display:inline-flex;align-items:center;gap:5px;}
+  .legend i{width:13px;height:13px;border-radius:3px;display:inline-block;}
+  /* ---- スマホ対応 ---- */
+  @media (max-width:640px){
+    body{font-size:15px;}
+    header{padding:8px 10px;gap:6px;}
+    header h1{font-size:15px;flex-basis:100%;}
+    header .spacer{display:none;}
+    header button{flex:1 1 auto;padding:9px 8px;font-size:13px;}
+    .tabs{top:0;position:static;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;}
+    .tabs button{white-space:nowrap;flex:0 0 auto;}
+    main{padding:10px;}
+    .grid{grid-template-columns:1fr;}      /* 入力フォームを1列に */
+    .grid .full{grid-column:1;}
+    .typefields.full.on{grid-column:1;}
+    .modal{padding:14px;border-radius:10px;}
+    .overlay{padding:8px;align-items:stretch;}
+    .day-card{flex-wrap:wrap;}
+    .day-card .time{min-width:auto;}
+    .cal-col,.cal-headrow .cal-colhead{flex-basis:130px;min-width:130px;}
+    input,select,textarea{font-size:16px;}  /* iOSの自動ズーム防止 */
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>🚢 隠岐出張スケジュール</h1>
+  <div class="spacer"></div>
+  <button onclick="openForm()">＋ 予定を追加</button>
+  <button onclick="copyItinerary()">📋 旅程をコピー</button>
+  <button onclick="printItinerary()">🖨 印刷/PDF</button>
+  <button class="ghost" onclick="exportJSON()">バックアップ書出</button>
+  <button class="ghost" onclick="document.getElementById('importFile').click()">取込</button>
+  <input type="file" id="importFile" accept="application/json" style="display:none" onchange="importJSON(event)">
+</header>
+
+<div class="tabs">
+  <button id="tab-table" class="active" onclick="setView('table')">📅 全体タイムテーブル</button>
+  <button id="tab-day" onclick="setView('day')">🗓 日別ビュー</button>
+  <button id="tab-paste" onclick="setView('paste')">📝 テキスト/HTML貼付（おすすめ）</button>
+  <button id="tab-pdf" onclick="setView('pdf')">📄 PDF読込</button>
+</div>
+
+<main id="main"></main>
+
+<!-- ===== Form modal ===== -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h3 id="modalTitle">予定を追加</h3>
+    <input type="hidden" id="f_id">
+    <div class="grid">
+      <div>
+        <label>種別</label>
+        <select id="f_type" onchange="renderTypeFields()">
+          <option value="meeting">打ち合わせ／訪問先</option>
+          <option value="transport">移動（交通手段）</option>
+          <option value="meal">食事</option>
+          <option value="sight">観光</option>
+          <option value="hotel">ホテル</option>
+          <option value="other">その他</option>
+        </select>
+      </div>
+      <div>
+        <label>タイトル</label>
+        <input id="f_title" placeholder="例：A社訪問">
+      </div>
+      <div>
+        <label id="f_date_label">日付</label>
+        <input id="f_date" type="date">
+      </div>
+      <div class="typefields" data-type="hotel">
+        <label style="color:#c2185b">チェックアウト日</label>
+        <input id="f_codate" type="date">
+      </div>
+      <div class="typefields" data-type="hotel">
+        <label>チェックイン時刻</label>
+        <input id="f_ci" type="time">
+      </div>
+      <div class="typefields" data-type="hotel">
+        <label>チェックアウト時刻</label>
+        <input id="f_co" type="time">
+      </div>
+      <div id="f_timecell">
+        <label>時刻（開始〜終了）</label>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <input id="f_start" type="time">
+          <span>〜</span>
+          <input id="f_end" type="time">
+        </div>
+      </div>
+
+      <!-- common -->
+      <div class="full"><label>住所／場所</label><input id="f_addr"></div>
+      <div><label>電話番号</label><input id="f_phone"></div>
+
+      <!-- meeting -->
+      <div class="typefields" data-type="meeting"><label>会社名</label><input id="f_company"></div>
+      <div class="typefields" data-type="meeting"><label>担当者</label><input id="f_contact"></div>
+      <div class="typefields full" data-type="meeting"><label>訪問目的</label><input id="f_purpose"></div>
+
+      <!-- transport -->
+      <div class="typefields" data-type="transport"><label>交通手段</label>
+        <select id="f_mode"><option>飛行機</option><option>新幹線</option><option>鉄道</option>
+        <option>バス</option><option>タクシー／車</option><option>レンタカー</option>
+        <option>高速船</option><option>フェリー</option><option>船</option><option>その他</option></select></div>
+      <div class="typefields" data-type="transport"><label>便名／列車名</label><input id="f_flight"></div>
+      <div class="typefields" data-type="transport"><label>出発（空港・駅・ターミナル）</label><input id="f_from"></div>
+      <div class="typefields" data-type="transport"><label>到着（空港・駅・ターミナル）</label><input id="f_to"></div>
+      <div class="typefields" data-type="transport"><label>予約状況</label>
+        <select id="f_resv"><option value="予約済">予約済</option><option value="手配中">手配中</option>
+        <option value="未手配">未手配</option></select></div>
+      <div class="typefields" data-type="transport"><label>予約番号／PNR／eチケット</label><input id="f_resvno"></div>
+      <div class="typefields" data-type="transport"><label>座席</label><input id="f_seat"></div>
+
+      <!-- meal -->
+      <div class="typefields" data-type="meal"><label>店名</label><input id="f_shop"></div>
+      <div class="typefields" data-type="meal"><label>特色料理・メモ</label><input id="f_special"></div>
+
+      <!-- sight -->
+      <div class="typefields" data-type="sight"><label>名称</label><input id="f_spot"></div>
+      <div class="typefields" data-type="sight"><label>特色・見どころ</label><input id="f_feature"></div>
+
+      <!-- hotel -->
+      <div class="typefields full" data-type="hotel"><label>ホテル名</label><input id="f_hotel"></div>
+      <div class="typefields" data-type="hotel"><label>支払</label>
+        <select id="f_pay"><option value="">（未選択）</option><option value="支払済">支払済</option>
+        <option value="現地払い">現地払い</option><option value="未定">未定</option></select></div>
+      <div class="typefields" data-type="hotel"><label>金額</label>
+        <div style="display:flex;gap:6px;">
+          <select id="f_currency" style="flex:0 0 90px">
+            <option value="円">円(JPY)</option><option value="元">元(CNY)</option>
+            <option value="$">USD($)</option><option value="€">EUR(€)</option>
+            <option value="₫">VND(₫)</option><option value="฿">THB(฿)</option>
+            <option value="">その他</option>
+          </select>
+          <input id="f_amount" type="number" inputmode="decimal" placeholder="例：29000" style="flex:1">
+        </div>
+      </div>
+
+      <div class="full"><label>メモ・その他</label><textarea id="f_memo"></textarea></div>
+      <div class="full">
+        <label>証憑（予約確認書など）※最大3つ</label>
+        <input type="file" id="f_evFile" accept="application/pdf,image/*" multiple onchange="attachEvidence(event)">
+        <div id="f_evInfo" style="margin-top:5px;font-size:12px;color:#52606d"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="del" id="delBtn" onclick="deleteItem()" style="display:none">削除</button>
+      <button class="sec" onclick="closeForm()">キャンセル</button>
+      <button onclick="saveItem()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script>
+const PDFJS = window['pdfjsLib'];
+if(PDFJS) PDFJS.GlobalWorkerOptions.workerSrc =
+  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+const TYPE = {
+  meeting:{label:'打合せ',color:'var(--c-meeting)',hex:'#1565c0'},
+  transport:{label:'移動',color:'var(--c-transport)',hex:'#00897b'},
+  meal:{label:'食事',color:'var(--c-meal)',hex:'#ef6c00'},
+  sight:{label:'観光',color:'var(--c-sight)',hex:'#7b1fa2'},
+  hotel:{label:'ホテル',color:'var(--c-hotel)',hex:'#c2185b'},
+  other:{label:'その他',color:'var(--c-other)',hex:'#546e7a'},
+};
+const KEY='oki_trip_schedule_v1';
+let DATA = [];
+let view='table';
+let dayIndex=0;
+
+/* ---------- 保存先：IndexedDB（大容量。添付PDFもPC/スマホで保存可） ---------- */
+const DB_NAME='okiTripScheduleDB', STORE='kv';
+function idbOpen(){ return new Promise((res,rej)=>{
+  const r=indexedDB.open(DB_NAME,1);
+  r.onupgradeneeded=()=>r.result.createObjectStore(STORE);
+  r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error);
+}); }
+function idbSet(k,v){ return idbOpen().then(db=>new Promise((res,rej)=>{
+  const tx=db.transaction(STORE,'readwrite'); tx.objectStore(STORE).put(v,k);
+  tx.oncomplete=()=>res(); tx.onerror=()=>rej(tx.error);
+})); }
+function idbGet(k){ return idbOpen().then(db=>new Promise((res,rej)=>{
+  const tx=db.transaction(STORE,'readonly'); const rq=tx.objectStore(STORE).get(k);
+  rq.onsuccess=()=>res(rq.result); rq.onerror=()=>rej(rq.error);
+})); }
+
+async function loadData(){
+  // ① IndexedDB（使える環境では大容量・添付対応）
+  try{ const v=await idbGet(KEY); if(Array.isArray(v) && v.length) return v; }catch(e){}
+  // ② localStorage（file:// でも確実に動く保存先）
+  try{ const ls=JSON.parse(localStorage.getItem(KEY)); if(Array.isArray(ls)) return ls; }catch(e){}
+  // ③ 空の IndexedDB 配列があればそれを返す
+  try{ const v=await idbGet(KEY); if(Array.isArray(v)) return v; }catch(e){}
+  return [];
+}
+function save(){
+  // localStorage（file:// でも確実に保存できる。まずこちらへ）
+  try{ localStorage.setItem(KEY, JSON.stringify(DATA)); }
+  catch(e){ console.warn('localStorage保存スキップ（容量超過の可能性）', e); }
+  // IndexedDB（使える環境のみ。file:// 等で不可でも上の localStorage で保存済み）
+  try{ idbSet(KEY,DATA).catch(()=>{}); }catch(e){}
+}
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+
+/* ---------- view switching ---------- */
+function setView(v){
+  view=v;
+  ['table','day','paste','pdf'].forEach(t=>document.getElementById('tab-'+t).classList.toggle('active',t===v));
+  render();
+}
+function render(){
+  if(view==='table') renderTable();
+  else if(view==='day') renderDay();
+  else if(view==='paste') renderPaste();
+  else renderPdf();
+}
+
+/* ---------- helpers ---------- */
+function sorted(){ return [...DATA].sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start)); }
+const ymd=x=>x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');
+/* その予定が占める日付の配列（ホテルはチェックイン日〜チェックアウト日の各日） */
+function itemDates(it){
+  if(it.type==='hotel' && it.date && it.codate && it.codate>it.date){
+    const out=[]; let d=new Date(it.date+'T00:00'); const end=new Date(it.codate+'T00:00');
+    while(d<=end){ out.push(ymd(d)); d.setDate(d.getDate()+1); }
+    return out;
+  }
+  return it.date?[it.date]:[];
+}
+function uniqueDates(){ const s=new Set(); DATA.forEach(it=>itemDates(it).forEach(d=>s.add(d))); return [...s].sort(); }
+function fmtDate(d){
+  if(!d) return '';
+  const dt=new Date(d+'T00:00');
+  const w=['日','月','火','水','木','金','土'][dt.getDay()];
+  return `${dt.getMonth()+1}/${dt.getDate()}(${w})`;
+}
+function isWeekend(d){ const g=new Date(d+'T00:00').getDay(); return g===0||g===6; }
+function esc(s){ return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+function detailLine(it){
+  const p=[];
+  if(it.type==='meeting'){ if(it.company)p.push('🏢'+it.company); if(it.contact)p.push('👤'+it.contact); if(it.purpose)p.push('🎯'+it.purpose); }
+  if(it.type==='transport'){ if(it.mode)p.push(it.mode); if(it.flight)p.push('✈'+it.flight);
+    if(it.from||it.to)p.push((it.from||'')+'→'+(it.to||'')); if(it.resv)p.push('['+it.resv+']');
+    if(it.resvno)p.push('🔖'+it.resvno); if(it.seat)p.push('🎫'+it.seat); }
+  if(it.type==='meal'){ if(it.shop)p.push('🍴'+it.shop); if(it.special)p.push(it.special); }
+  if(it.type==='sight'){ if(it.spot)p.push('📍'+it.spot); if(it.feature)p.push(it.feature); }
+  if(it.type==='hotel'){ if(it.hotel)p.push('🏨'+it.hotel); if(it.pay)p.push('支払:'+it.pay);
+    if(it.amount)p.push('💴'+Number(it.amount).toLocaleString()+(it.currency||''));
+    if(it.date)p.push('IN '+fmtDate(it.date)+(it.ci?' '+it.ci:''));
+    if(it.codate)p.push('OUT '+fmtDate(it.codate)+(it.co?' '+it.co:'')); }
+  if(it.addr)p.push('📌'+it.addr);
+  if(it.phone)p.push('☎'+it.phone);
+  const ev=itemEvidence(it); if(ev.length)p.push('📎証憑'+ev.length+'件');
+  return p;
+}
+
+/* ---------- TABLE view (x=date, y=time) ---------- */
+const HOURPX=54;            // 1時間あたりの高さ(px)
+function toMin(t){ if(!t) return null; const [h,m]=t.split(':'); return (+h)*60+(+m); }
+function renderTable(){
+  const dates=uniqueDates();
+  const m=document.getElementById('main');
+  if(dates.length===0){ m.innerHTML=emptyMsg(); return; }
+  // 表示する時間帯（開始・終了の両方を考慮）
+  let minH=8,maxH=19;
+  DATA.forEach(it=>{
+    const s=toMin(it.start); if(s==null) return;
+    const e=toMin(it.end)||s+60;
+    minH=Math.min(minH, Math.floor(s/60));
+    maxH=Math.max(maxH, Math.ceil(e/60));
+  });
+  minH=Math.max(0,minH); maxH=Math.min(24,maxH);
+  const rows=maxH-minH, gridH=rows*HOURPX;
+
+  // ---- ヘッダ（日付） ----
+  let head=`<div class="cal-headrow"><div class="ax axhdr"></div>`;
+  dates.forEach(d=>{ head+=`<div class="cal-colhead ${isWeekend(d)?'weekend':''}" style="flex:1 0 160px">${fmtDate(d)}</div>`; });
+  head+=`</div>`;
+
+  // ---- 本体 ----
+  let body=`<div class="cal"><div class="cal-axis">`;
+  for(let h=minH;h<maxH;h++) body+=`<div class="ah">${String(h).padStart(2,'0')}:00</div>`;
+  body+=`</div>`;
+
+  dates.forEach(d=>{
+    body+=`<div class="cal-col">`;
+    // 終日（ホテル等、時刻なし）
+    const allday=DATA.filter(it=>!it.start && itemDates(it).includes(d));
+    body+=`<div class="cal-allday">`;
+    allday.forEach(it=>{
+      let tag = it.type==='hotel' ? (it.date===d?'IN':(it.codate===d?'OUT':'泊')) : TYPE[it.type].label;
+      body+=`<div class="ev" style="background:${TYPE[it.type].hex}" onclick="editItem('${it.id}')">
+        <div class="t">${esc(it.title)||TYPE[it.type].label}<span class="badge">${tag}</span></div></div>`;
+    });
+    body+=`</div>`;
+    // 時刻あり（帯）
+    body+=`<div class="cal-grid" style="height:${gridH}px">`;
+    for(let h=minH;h<=maxH;h++) body+=`<div class="hline" style="top:${(h-minH)*HOURPX}px"></div>`;
+    const timed=DATA.filter(it=>it.date===d && it.start)
+                    .map(it=>({it,s:toMin(it.start),e:(toMin(it.end)||toMin(it.start)+60)}))
+                    .sort((a,b)=>a.s-b.s);
+    layoutLanes(timed);
+    timed.forEach(o=>{
+      const top=(o.s-minH*60)/60*HOURPX;
+      const hpx=Math.max(22,(o.e-o.s)/60*HOURPX-2);
+      const w=100/o.lanes, left=o.lane*w;
+      const det=detailLine(o.it).slice(0,2).join(' ');
+      body+=`<div class="cal-ev" style="top:${top}px;height:${hpx}px;left:calc(${left}% + 2px);width:calc(${w}% - 4px);background:${TYPE[o.it.type].hex}" onclick="editItem('${o.it.id}')">
+        <div class="t">${o.it.start}${o.it.end?'-'+o.it.end:''} ${esc(o.it.title)||TYPE[o.it.type].label}</div>
+        ${hpx>40&&det?`<div>${esc(det)}</div>`:''}</div>`;
+    });
+    body+=`</div></div>`;
+  });
+  body+=`</div>`;
+
+  let html=legend()+`<div class="tt-wrap" style="padding-bottom:4px">${head}${body}</div>`;
+  const noDate=DATA.filter(it=>!it.date);
+  if(noDate.length){ html+='<p class="hint">📌 日付未設定：'+noDate.map(it=>`<a href="#" onclick="editItem('${it.id}');return false">${esc(it.title||TYPE[it.type].label)}</a>`).join('、 ')+'</p>'; }
+  m.innerHTML=html;
+}
+/* 重なる予定を横に並べるためのレーン割り当て */
+function layoutLanes(arr){
+  const laneEnd=[];
+  arr.forEach(o=>{
+    let placed=false;
+    for(let i=0;i<laneEnd.length;i++){ if(laneEnd[i]<=o.s){ o.lane=i; laneEnd[i]=o.e; placed=true; break; } }
+    if(!placed){ o.lane=laneEnd.length; laneEnd.push(o.e); }
+  });
+  const n=laneEnd.length||1;
+  arr.forEach(o=>o.lanes=n);
+}
+function legend(){
+  return '<div class="legend">'+Object.values(TYPE).map(t=>`<span><i style="background:${t.hex}"></i>${t.label}</span>`).join('')+'</div>';
+}
+
+/* ---------- DAY view ---------- */
+function renderDay(){
+  const dates=uniqueDates();
+  const m=document.getElementById('main');
+  if(dates.length===0){ m.innerHTML=emptyMsg(); return; }
+  if(dayIndex>=dates.length) dayIndex=dates.length-1;
+  if(dayIndex<0) dayIndex=0;
+  const d=dates[dayIndex];
+  const items=DATA.filter(it=>itemDates(it).includes(d)).sort((a,b)=>(a.start||'99').localeCompare(b.start||'99'));
+  let html=`<div class="day-nav">
+    <button class="sec" onclick="dayIndex--;render()" ${dayIndex===0?'disabled':''}>◀ 前日</button>
+    <h2>${fmtDate(d)}</h2>
+    <button class="sec" onclick="dayIndex++;render()" ${dayIndex===dates.length-1?'disabled':''}>翌日 ▶</button>
+    <span class="hint">${dayIndex+1} / ${dates.length} 日</span>
+  </div><div class="timeline">`;
+  items.forEach(it=>{
+    const det=detailLine(it);
+    let timeCol=(it.start||'—')+(it.end?'<br>〜'+it.end:'');
+    let stay='';
+    if(it.type==='hotel'){
+      if(it.date===d){ stay='（チェックイン）'; timeCol=it.ci||'IN'; }
+      else if(it.codate===d){ stay='（チェックアウト）'; timeCol=it.co||'OUT'; }
+      else { stay='（滞在中）'; timeCol='泊'; }
+    }
+    html+=`<div class="day-card" style="border-left-color:${TYPE[it.type].hex}">
+      <div class="time">${timeCol}</div>
+      <div class="body">
+        <div class="ttl"><span class="typ" style="background:${TYPE[it.type].hex}">${TYPE[it.type].label}</span>${esc(it.title)||''}${stay?'<small style="color:#c2185b">'+stay+'</small>':''}</div>
+        ${det.length?`<div class="det">${det.map(x=>'<span>'+esc(x)+'</span>').join('')}</div>`:''}
+        ${it.memo?`<div class="det" style="color:#90a4ae">📝 ${esc(it.memo)}</div>`:''}
+      </div>
+      <div class="acts">
+        <button class="sec" onclick="editItem('${it.id}')">編集</button>
+        ${itemEvidence(it).map((ev,i)=>ev.data?`<button class="sec" onclick="openItemEvidence('${it.id}',${i})">📎${i+1}開く</button><button class="sec" onclick="downloadItemEvidence('${it.id}',${i})">⬇${i+1}保存</button>`:'').join('')}
+      </div>
+    </div>`;
+  });
+  html+='</div>';
+  m.innerHTML=html;
+}
+
+function emptyMsg(){ return '<div class="empty">まだ予定がありません。<br>右上の「＋ 予定を追加」、またはPDF読込から登録してください。</div>'; }
+
+/* ---------- PDF view ---------- */
+function renderPdf(){
+  const m=document.getElementById('main');
+  m.innerHTML=`
+    <div class="pdf-zone" id="pdfZone">
+      📄 ここに予約確認書のPDFをドラッグ＆ドロップ、または
+      <button onclick="document.getElementById('pdfFile').click()">ファイル選択</button>
+      <input type="file" id="pdfFile" accept="application/pdf" style="display:none" multiple>
+    </div>
+    <p class="hint">PDFの本文テキストを抽出して下に表示します。文字情報を持たない画像PDF（スキャン・予約サイトの画像出力など）は自動でOCR（文字認識）に切り替わります。※OCRは初回のみ日本語辞書をダウンロードするため数十秒かかることがあります。内容を確認し、「この内容でフォームを開く」で新規予定の入力欄に貼り付けできます（種別・日時はご確認のうえ調整してください）。</p>
+    <div id="pdfResults"></div>`;
+  const zone=document.getElementById('pdfZone');
+  const inp=document.getElementById('pdfFile');
+  inp.addEventListener('change',e=>handlePdfs(e.target.files));
+  ['dragover','dragenter'].forEach(ev=>zone.addEventListener(ev,e=>{e.preventDefault();zone.classList.add('drag');}));
+  ['dragleave','drop'].forEach(ev=>zone.addEventListener(ev,e=>{e.preventDefault();zone.classList.remove('drag');}));
+  zone.addEventListener('drop',e=>handlePdfs(e.dataTransfer.files));
+}
+async function handlePdfs(files){
+  const box=document.getElementById('pdfResults');
+  for(const f of files){
+    if(f.type!=='application/pdf') continue;
+    const block=document.createElement('div');
+    block._file=f;
+    const setStatus=s=>{const h=block.querySelector('h3 small'); if(h)h.textContent=s;};
+    block.innerHTML=`<h3 style="margin:14px 0 4px">📄 ${esc(f.name)} <small style="color:#90a4ae">読込中…</small></h3>`;
+    box.prepend(block);
+    try{
+      let text=await extractPdf(f);
+      // 文字レイヤーが無い／ToUnicode欠落で文字化けする → OCRにフォールバック
+      if(isGarbled(text)){
+        setStatus('文字情報が読めないPDFのためOCR実行中…（初回は辞書DLで時間がかかります）');
+        text=await ocrPdf(f,setStatus);
+      }
+      renderPdfResult(block,f.name,text);
+      block._text=text;
+    }catch(err){
+      block.innerHTML=`<h3 style="margin:14px 0 4px">📄 ${esc(f.name)}</h3><p class="hint">読込に失敗しました：${esc(err.message)}（画像ベースのPDFはテキスト抽出できません）</p>`;
+    }
+  }
+}
+// 抽出テキストが「使える日本語/英数字」かを判定（ToUnicode欠落の文字化けを検知）
+function isGarbled(text){
+  const t=(text||'').replace(/\s/g,'');
+  if(t.length<10) return true;            // ほぼ空＝画像PDF
+  let good=0;
+  for(const ch of t){
+    const c=ch.codePointAt(0);
+    if((c>=0x3040&&c<=0x30ff)||           // ひらがな・カタカナ
+       (c>=0x4e00&&c<=0x9fff)||           // 漢字
+       (c>=0x30&&c<=0x39)||(c>=0x41&&c<=0x5a)||(c>=0x61&&c<=0x7a)) // 英数字
+      good++;
+  }
+  return (good/t.length) < 0.5;           // 有効文字が半分未満なら文字化けとみなす
+}
+function renderPdfResult(block,fname,text){
+  block.innerHTML=`<h3 style="margin:14px 0 4px">📄 ${esc(fname)}</h3>
+    <textarea class="pdf-text">${esc(text)}</textarea>
+    <div style="margin:8px 0 4px;display:flex;gap:8px;flex-wrap:wrap">
+      <button onclick='openFormFromPdf(${JSON.stringify(fname)})'>この内容でフォームを開く</button>
+      <button class="sec" onclick='forceOcr(this,${JSON.stringify(fname)})'>🔍 OCRで読み直す</button>
+    </div>`;
+  block._text=text;
+  block._fname=fname;
+}
+// 手動で強制OCR（自動判定が外れた場合のため）
+async function forceOcr(btn,fname){
+  const block=btn.closest('#pdfResults > div');
+  const file=block&&block._file;
+  if(!file){ alert('元のPDFが見つかりません。お手数ですが再度読み込んでください。'); return; }
+  const h=block.querySelector('h3');
+  h.innerHTML=`📄 ${esc(fname)} <small style="color:#90a4ae">OCR実行中…</small>`;
+  const setStatus=s=>{const sm=h.querySelector('small'); if(sm)sm.textContent=s;};
+  try{
+    const text=await ocrPdf(file,setStatus);
+    renderPdfResult(block,fname,text);
+    block._file=file;
+  }catch(err){ setStatus('OCR失敗：'+err.message); }
+}
+async function extractPdf(file){
+  const buf=await file.arrayBuffer();
+  const pdf=await PDFJS.getDocument({
+    data:buf,
+    // 日本語(CJK)PDFのCIDフォントをデコードするためのCMap
+    cMapUrl:'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/',
+    cMapPacked:true,
+    useSystemFonts:true
+  }).promise;
+  let out='';
+  for(let p=1;p<=pdf.numPages;p++){
+    const page=await pdf.getPage(p);
+    const tc=await page.getTextContent();
+    out+=tc.items.map(i=>i.str).join(' ')+'\n';
+  }
+  return out.trim();
+}
+/* 画像PDFをOCR（pdf.jsで各ページを画像化→Tesseractで日本語+英語認識） */
+async function ocrPdf(file,setStatus){
+  if(!window.Tesseract) throw new Error('OCRライブラリの読込に失敗しました（インターネット接続を確認してください）');
+  const buf=await file.arrayBuffer();
+  const pdf=await PDFJS.getDocument({data:buf}).promise;
+  const worker=await Tesseract.createWorker('jpn+eng',1,{
+    logger:m=>{ if(m.status==='recognizing text'&&setStatus) setStatus(`OCR認識中… ${Math.round(m.progress*100)}%`); }
+  });
+  let out='';
+  try{
+    for(let p=1;p<=pdf.numPages;p++){
+      if(setStatus) setStatus(`画像化中… (${p}/${pdf.numPages}ページ)`);
+      const page=await pdf.getPage(p);
+      const vp=page.getViewport({scale:2.0});  // 解像度を上げて認識精度を確保
+      const canvas=document.createElement('canvas');
+      canvas.width=vp.width; canvas.height=vp.height;
+      await page.render({canvasContext:canvas.getContext('2d'),viewport:vp}).promise;
+      const {data}=await worker.recognize(canvas);
+      out+=data.text+'\n';
+    }
+  } finally { await worker.terminate(); }
+  return out.trim();
+}
+// 主要空港コード→日本語名（必要に応じて追記してください）
+const AIRPORTS={XMN:'厦門',NRT:'成田',HND:'羽田',KIX:'関西',ITM:'伊丹',NGO:'中部',
+  FUK:'福岡',CTS:'新千歳',OKA:'那覇',HKG:'香港',TPE:'台北',ICN:'ソウル仁川',
+  PVG:'上海浦東',PEK:'北京',CAN:'広州',SIN:'シンガポール',BKK:'バンコク',
+  SGN:'ホーチミン',HAN:'ハノイ',KMG:'昆明',CKG:'重慶'};
+
+/* OCRテキストから予約内容を解析して候補項目を返す */
+function parseReservation(text){
+  const r={memo:text};
+  // ノイズ行（ページヘッダの日時印字・URL・サイト名）を除いた本文
+  const lines=text.split(/\n/).filter(l=>
+    !/https?:|orderid|Trip\.com/i.test(l) &&
+    !/^\s*20\d{2}[\/年.\-]\d{1,2}[\/月.\-]\d{1,2}.*\d{1,2}:\d{2}/.test(l)  // 「2026/06/05 11:10 …」等の日付+時刻ヘッダのみ除去（日付だけの行は残す）
+  );
+  const body=lines.join('\n');
+
+  // 種別判定（単語1個で決めず、複数の手がかりを点数化して判定）
+  let ht=0,tr=0;
+  if(/ホテル|hotel|酒店|旅館|ホステル/i.test(text)) ht+=2;
+  if(/チェック\s*アウト|チェックアウト/.test(text)) ht+=2;
+  if(/\d\s*泊|宿泊料金|宿泊日|客室|泊数|1\s*室|部屋/.test(text)) ht+=1;
+  if(/\bPNR\b|搭乗|航空券番号|eチケット|e\s*チケット/i.test(text)) tr+=2;
+  if(/\b[A-Z]{2}\s?\d{3,4}\b/.test(text)) tr+=2;                 // 便名 例:MF815
+  if(/空港|フライト|出発.{0,6}到着|便名|新幹線|列車|乗車券/.test(text)) tr+=1;
+  r.type = ht>tr ? 'hotel' : (tr>0 ? 'transport' : 'other');
+
+  // 日付候補（M月D日をすべて拾う）。完全な「YYYY年M月D日」が1つだけなら自動入力
+  const dcand=[...body.matchAll(/(\d{1,2})\s*月\s*(\d{1,2})\s*日/g)].map(m=>m[1]+'/'+m[2]);
+  if(dcand.length) r._dateHint=[...new Set(dcand)].join(' , ');
+  const fullDates=[...new Set([...body.matchAll(/(20\d{2})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*日/g)]
+    .map(m=>`${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`))];
+  if(fullDates.length===1) r.date=fullDates[0];   // 明確に1つだけなら採用
+
+  // 予約番号（数字長桁＝Trip.com系／英数字＝JAL系 例:DHC68D）
+  const resvNum=body.match(/予約\s*番号[\s\S]{0,12}?(\d{10,})/);
+  const resvRef=body.match(/予約\s*番号[\s\S]{0,12}?\b([A-Z]{2,}[A-Z0-9]{3,6})\b/);
+
+  if(r.type==='hotel'){
+    parseHotel(r,body,text);
+  }else if(r.type==='transport'){
+    parseTransport(r,body,text);
+  }
+  // 予約番号は共通でメモ先頭の参照に（種別別欄が無くても残す）
+  const ref=(resvNum&&resvNum[1])||(resvRef&&resvRef[1]);
+  if(ref) r._ref='予約番号:'+ref;
+  return r;
+}
+
+/* ---- 交通（航空券）---- */
+function parseTransport(r,body,text){
+  r.mode='飛行機'; r.resv='予約済';
+  if(!r.date){ const d=firstDate(body); if(d) r.date=d; }   // 出発日（本文で最初の日付）
+  const fm=body.match(/\b([A-Z]{2}\s?\d{3,4})\b/);          // 便名 例:MF815
+  if(fm) r.flight=fm[1].replace(/\s/,'');
+  const times=(body.match(/\b([0-2]?\d:[0-5]\d)\b/g)||[]);   // 出発・到着
+  if(times[0]) r.start=normTime(times[0]);
+  if(times[1]) r.end=normTime(times[1]);
+  const codes=[...new Set((body.match(/\b[A-Z]{3}\b/g)||[]).filter(c=>AIRPORTS[c]))];
+  if(codes[0]) r.from=codes[0]+' '+AIRPORTS[codes[0]];
+  if(codes[1]){
+    const tm=body.match(new RegExp(codes[1]+'[^\\n]{0,20}?(T\\d)'));
+    r.to=codes[1]+' '+AIRPORTS[codes[1]]+(tm?' '+tm[1]:'');
+  }
+  // 空港コードが無い場合（JAL等＝日本語都市名）→ 時刻の直後の地名を出発/到着に
+  if(!r.from || !r.to){
+    const clean=s=>s.replace(/\s+/g,' ').replace(/^(.+?)\s*[（(]\1[）)]$/,'$1').trim();
+    const seg=[...body.matchAll(/(\d{1,2}:\d{2})\s+([^\d\n\t]{1,30}?)(?=\s*[\t\n]|\s*\d{1,2}:\d{2}|$)/g)];
+    if(seg[0] && !r.from) r.from=clean(seg[0][2]);
+    if(seg[1] && !r.to)   r.to=clean(seg[1][2]);
+  }
+  // 予約番号・PNR・eチケット・座席 → 「座席／予約番号」欄
+  const resvNum=body.match(/予約\s*番号[\s\S]{0,12}?(\d{10,})/);
+  const resvRef=body.match(/予約\s*番号[\s\S]{0,12}?\b([A-Z]{2,}[A-Z0-9]{3,6})\b/);
+  const pnr=body.match(/PNR[^\wA-Z]{0,6}([A-Z0-9]{6})/);
+  const etk=body.match(/(?:航空券|e?\s*チケ[ッツ]ト)\s*番号[^\d]{0,4}([\d-]{8,})/);
+  // 予約番号・PNR・eチケット → 予約番号欄
+  const resvList=[],refs=new Set();
+  if(resvNum){ resvList.push('予約'+resvNum[1]); refs.add(resvNum[1]); }
+  if(resvRef&&!refs.has(resvRef[1])){ resvList.push('予約'+resvRef[1]); refs.add(resvRef[1]); }
+  if(pnr&&!refs.has(pnr[1])){ resvList.push('PNR:'+pnr[1]); refs.add(pnr[1]); }
+  if(etk) resvList.push('eTKT:'+etk[1]);
+  if(resvList.length) r.resvno=resvList.join(' / ');
+  // 座席番号 → 座席欄
+  const seatNo=body.match(/\b(\d{1,2}[A-K])\b/);
+  if(seatNo) r.seat=seatNo[1];
+  const short=s=>(s||'').split(/[（(\s]/)[0];                 // 「東京 (成田)」→「東京」
+  const route=(r.from&&r.to)?short(r.from)+'→'+short(r.to):'';
+  r.title=[r.flight,route].filter(Boolean).join(' ');
+}
+
+/* ---- ホテル ---- */
+function parseHotel(r,body,text){
+  // ホテル名：「ホテル」または「酒店」を含む行（最初の1つ）
+  const hline=body.split(/\n/).map(l=>l.trim())
+    .find(l=>/(ホテル|酒店|ホステル|旅館|inn|hotel)/i.test(l)&&l.length<=40&&!/予約|検索|アプリ|特典|料金/.test(l));
+  if(hline) r.hotel=hline.replace(/\s+/g,' ');
+  if(r.hotel) r.title=r.hotel;
+  // 住所：番地表記（No.／路／Road）や郵便番号・国名を含む行
+  const aline=body.split(/\n/).map(l=>l.trim())
+    .find(l=>/(No\.?\s*\d+|Road|路|\d{5,6}\s*[^\d]*(省|市|区|町|中国|日本))/i.test(l)&&l.length<=60);
+  if(aline) r.addr=aline.replace(/\s+/g,' ');
+  // 電話番号
+  const tel=body.match(/(\+?\d[\d\-]{7,}\d)/);
+  if(tel) r.phone=tel[1];
+  // 支払：前払い／現地払い
+  if(/お支払い|引き落とし|請求され|決済済|前払|支払\s*済/.test(text)) r.pay='支払済';
+  else if(/現地|現金|チェックイン時|到着時/.test(text)) r.pay='現地払い';
+  // チェックイン日/時刻・チェックアウト日/時刻
+  // 「チェックアウト」を境に前半＝チェックイン情報、後半＝チェックアウト情報として抽出
+  const io=text.search(/チェック\s*アウト/);
+  const ci=dateTimeFrom(io>=0?text.slice(0,io):text);
+  if(ci){ r.date=ci.date; if(ci.time) r.ci=ci.time; }
+  if(io>=0){
+    const co=dateTimeFrom(text.slice(io));
+    if(co){ r.codate=co.date; if(co.time) r.co=co.time; }
+  }
+}
+/* 文字列から最初の「YYYY年M月D日」とその直後のHH:MMを取り出す */
+function dateTimeFrom(s){
+  const dm=s.match(/(20\d{2})\s*[年./\-]\s*(\d{1,2})\s*[月./\-]\s*(\d{1,2})/);
+  if(!dm) return null;
+  const after=s.slice(dm.index+dm[0].length, dm.index+dm[0].length+25);
+  const tm=after.match(/(\d{1,2}:\d{2})/);
+  return { date:`${dm[1]}-${pad2(dm[2])}-${pad2(dm[3])}`, time: tm?normTime(tm[1]):'' };
+}
+function normTime(t){ const [h,m]=t.split(':'); return String(h).padStart(2,'0')+':'+m; }
+const pad2=n=>String(n).padStart(2,'0');
+/* 文字列中で最初に現れる日付を ISO(YYYY-MM-DD) で返す。年が無ければ当年を補完 */
+const MONTHS={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+function firstDate(s){
+  const Y=new Date().getFullYear();
+  let m;
+  // 2026年6月19日 / 2026/6/19 / 2026-6-19
+  if(m=s.match(/(20\d{2})\s*[年./\-]\s*(\d{1,2})\s*[月./\-]\s*(\d{1,2})/))
+    return `${m[1]}-${pad2(m[2])}-${pad2(m[3])}`;
+  // 6月19日（年なし→当年）
+  if(m=s.match(/(\d{1,2})\s*月\s*(\d{1,2})\s*日/))
+    return `${Y}-${pad2(m[1])}-${pad2(m[2])}`;
+  // 19 Jun 2026 / 19 Jun
+  if(m=s.match(/\b(\d{1,2})\s*[-\s]?\s*(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s*,?\s*(20\d{2})?/i))
+    return `${m[3]||Y}-${pad2(MONTHS[m[2].toLowerCase()])}-${pad2(m[1])}`;
+  // Jun 19, 2026 / Jun 19
+  if(m=s.match(/\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s*(\d{1,2})\s*,?\s*(20\d{2})?/i))
+    return `${m[3]||Y}-${pad2(MONTHS[m[1].toLowerCase()])}-${pad2(m[2])}`;
+  // 6/19 や 6-19（年なし・最終手段）
+  if(m=s.match(/\b(\d{1,2})\s*[\/]\s*(\d{1,2})\b/))
+    return `${Y}-${pad2(m[1])}-${pad2(m[2])}`;
+  return '';
+}
+
+function openFormFromPdf(fname){
+  const blocks=[...document.querySelectorAll('#pdfResults > div')];
+  const b=blocks.find(x=>x.querySelector('h3')&&x.querySelector('h3').textContent.includes(fname));
+  const text=b&&b.querySelector('.pdf-text')?b.querySelector('.pdf-text').value:'';
+  fillFormFromText(text,fname);
+}
+/* テキスト/HTMLを解析してフォームを開く（PDF・貼付の共通処理） */
+function fillFormFromText(rawText,srcName){
+  const text=stripHtml(rawText);
+  const p=parseReservation(text);
+  openForm();
+  document.getElementById('f_type').value=p.type||'other';
+  renderTypeFields();
+  const setv=(id,v)=>{const el=document.getElementById('f_'+id); if(el&&v) el.value=v;};
+  setv('title',p.title); setv('date',p.date); setv('start',p.start); setv('end',p.end);
+  setv('flight',p.flight); setv('from',p.from); setv('to',p.to); setv('seat',p.seat); setv('resvno',p.resvno);
+  setv('mode',p.mode); setv('resv',p.resv); setv('pay',p.pay); setv('phone',p.phone);
+  setv('hotel',p.hotel); setv('addr',p.addr);
+  setv('codate',p.codate); setv('ci',p.ci); setv('co',p.co);
+  const hint=[p._dateHint?`【日付候補(要確認・手入力)：${p._dateHint}】`:'',
+              p._ref?`【${p._ref}】`:''].filter(Boolean).join(' ');
+  const hintLine=hint?hint+'\n':'';
+  document.getElementById('f_memo').value=hintLine+(text||'').slice(0,2000);
+  renderEvidence();
+  if(p._dateHint) document.getElementById('f_date').focus();
+}
+/* HTMLタグを除去してテキスト化（HTMLソースを貼られた場合に対応） */
+function stripHtml(s){
+  s=s||'';
+  if(!/<[a-z!/][\s\S]*?>/i.test(s)) return s;   // タグが無ければそのまま
+  const doc=new DOMParser().parseFromString(s,'text/html');
+  doc.querySelectorAll('script,style,head').forEach(e=>e.remove());
+  // ブロック要素を改行に
+  doc.querySelectorAll('br,p,div,tr,li,h1,h2,h3,h4,td,th').forEach(e=>e.append('\n'));
+  return (doc.body?doc.body.textContent:s).replace(/[ \t]+\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim();
+}
+/* ---------- 貼り付け入力ビュー ---------- */
+function renderPaste(){
+  const m=document.getElementById('main');
+  m.innerHTML=`
+    <p class="hint">予約確認メールの<b>本文</b>、または予約ページの<b>HTMLソース</b>をそのまま貼り付けて「解析してフォームを開く」を押してください。OCRと違い文字化けせず正確に解析できます。<br>
+    ※メールは本文を選択してコピー、Webページは「ページのソースを表示(Ctrl+U)」または本文を選択コピーでOKです。</p>
+    <textarea id="pasteBox" class="pdf-text" placeholder="ここにメール本文 または HTMLソースを貼り付け…"></textarea>
+    <div style="margin:10px 0;display:flex;gap:8px;flex-wrap:wrap">
+      <button onclick="parsePasted()">解析してフォームを開く</button>
+      <button class="sec" onclick="document.getElementById('pasteBox').value=''">クリア</button>
+    </div>`;
+}
+function parsePasted(){
+  const t=document.getElementById('pasteBox').value.trim();
+  if(!t){ alert('テキストまたはHTMLを貼り付けてください。'); return; }
+  fillFormFromText(t,'');
+}
+
+/* ---------- form ---------- */
+const FIELDS=['title','date','start','end','addr','phone','company','contact','purpose',
+  'mode','flight','from','to','resv','resvno','seat','shop','special','spot','feature','hotel','pay','currency','amount','ci','codate','co','memo'];
+let formEvidence=[];   // 編集中の証憑添付（[{name,data}] 最大3）
+/* 旧形式(pdf/pdfData) や evidence配列 を正規化して返す */
+function itemEvidence(it){
+  if(Array.isArray(it.evidence)) return it.evidence;
+  if(it.pdfData||it.pdf) return [{name:it.pdf||'添付ファイル',data:it.pdfData||''}];
+  return [];
+}
+function openForm(){
+  document.getElementById('modalTitle').textContent='予定を追加';
+  document.getElementById('f_id').value='';
+  document.getElementById('delBtn').style.display='none';
+  FIELDS.forEach(f=>{const el=document.getElementById('f_'+f); if(el) el.value='';});
+  document.getElementById('f_type').value='meeting';
+  document.getElementById('f_currency').value='円';   // 金額の通貨は既定で円
+  document.getElementById('f_evFile').value='';
+  formEvidence=[];
+  if(uniqueDates().length && view==='day') document.getElementById('f_date').value=uniqueDates()[dayIndex];
+  renderTypeFields(); renderEvidence();
+  document.getElementById('overlay').classList.add('open');
+}
+function editItem(id){
+  const it=DATA.find(x=>x.id===id); if(!it) return;
+  document.getElementById('modalTitle').textContent='予定を編集';
+  document.getElementById('f_id').value=it.id;
+  document.getElementById('f_type').value=it.type;
+  FIELDS.forEach(f=>{const el=document.getElementById('f_'+f); if(el) el.value=it[f]||'';});
+  if(!document.getElementById('f_currency').value) document.getElementById('f_currency').value='円';
+  document.getElementById('f_evFile').value='';
+  formEvidence=itemEvidence(it).map(x=>({name:x.name,data:x.data}));   // コピー
+  document.getElementById('delBtn').style.display='';
+  renderTypeFields(); renderEvidence();
+  document.getElementById('overlay').classList.add('open');
+}
+/* 証憑（添付ファイル・最大3つ）の処理 */
+const MAX_EVIDENCE=3;
+function attachEvidence(e){
+  const files=[...e.target.files];
+  e.target.value='';
+  if(!files.length) return;
+  let added=0;
+  const step=i=>{
+    if(i>=files.length){ if(added) renderEvidence(); return; }
+    if(formEvidence.length>=MAX_EVIDENCE){ alert('証憑は最大'+MAX_EVIDENCE+'つまでです。'); if(added)renderEvidence(); return; }
+    const f=files[i];
+    if(f.size>4*1024*1024 && !confirm(f.name+' は大きめです（'+Math.round(f.size/1024)+'KB）。続けますか？')){ step(i+1); return; }
+    const r=new FileReader();
+    r.onload=()=>{ formEvidence.push({name:f.name,data:r.result}); added++; step(i+1); };
+    r.readAsDataURL(f);
+  };
+  step(0);
+}
+function renderEvidence(){
+  const info=document.getElementById('f_evInfo');
+  const fileInput=document.getElementById('f_evFile');
+  if(fileInput) fileInput.disabled = formEvidence.length>=MAX_EVIDENCE;
+  if(!formEvidence.length){ info.innerHTML='<span style="color:#90a4ae">未添付（PDF・画像を最大'+MAX_EVIDENCE+'つ選択できます）</span>'; return; }
+  info.innerHTML=formEvidence.map((ev,i)=>
+    `<div style="margin:3px 0">📎 <b>${esc(ev.name||'添付'+(i+1))}</b> `+
+    (ev.data?`<button type="button" class="sec" style="padding:2px 8px" onclick="openFormEvidence(${i})">開く</button> `:'')+
+    (ev.data?`<button type="button" class="sec" style="padding:2px 8px" onclick="downloadBlob(formEvidence[${i}].data,formEvidence[${i}].name)">保存</button> `:'')+
+    `<button type="button" class="sec" style="padding:2px 8px" onclick="removeFormEvidence(${i})">削除</button></div>`
+  ).join('')+(formEvidence.length>=MAX_EVIDENCE?'<div style="color:#c2185b;font-size:11px">上限'+MAX_EVIDENCE+'つに達しています</div>':'');
+}
+function openBlob(data,name){
+  try{
+    const [meta,b64]=data.split(',');
+    const mime=(meta.match(/data:(.*?);/)||[])[1]||'application/octet-stream';
+    const bin=atob(b64); const arr=new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
+    const url=URL.createObjectURL(new Blob([arr],{type:mime}));
+    // スマホ(iOS Safari等)でも開けるよう、実際のリンククリックで開く
+    const a=document.createElement('a');
+    a.href=url; a.target='_blank'; a.rel='noopener';
+    document.body.appendChild(a); a.click(); a.remove();
+    // 新規タブが開けない環境向けに、少し待ってダウンロード用リンクも案内
+    setTimeout(()=>URL.revokeObjectURL(url),120000);
+  }catch(e){
+    // 最終手段：dataURLを直接開く
+    try{ window.location.href=data; }catch(_){ alert('ファイルを開けませんでした。'); }
+  }
+}
+function downloadBlob(data,name){
+  const a=document.createElement('a'); a.href=data; a.download=name||'証憑';
+  document.body.appendChild(a); a.click(); a.remove();
+}
+function openFormEvidence(i){ const ev=formEvidence[i]; if(ev&&ev.data) openBlob(ev.data,ev.name); }
+function removeFormEvidence(i){ formEvidence.splice(i,1); renderEvidence(); }
+function openItemEvidence(id,i){
+  const it=DATA.find(x=>x.id===id); if(!it) return;
+  const ev=itemEvidence(it)[i]; if(ev&&ev.data) openBlob(ev.data,ev.name);
+}
+function downloadItemEvidence(id,i){
+  const it=DATA.find(x=>x.id===id); if(!it) return;
+  const ev=itemEvidence(it)[i]; if(ev&&ev.data) downloadBlob(ev.data,ev.name);
+}
+function renderTypeFields(){
+  const t=document.getElementById('f_type').value;
+  document.querySelectorAll('.typefields').forEach(el=>{
+    el.classList.toggle('on', el.dataset.type===t);
+  });
+  document.getElementById('f_date_label').textContent = t==='hotel' ? 'チェックイン日' : '日付';
+  document.getElementById('f_timecell').style.display = t==='hotel' ? 'none' : '';  // ホテルは開始〜終了を非表示
+}
+function saveItem(){
+  try{
+    const id=document.getElementById('f_id').value;
+    const obj={id:id||uid(), type:document.getElementById('f_type').value};
+    FIELDS.forEach(f=>{const el=document.getElementById('f_'+f); if(el) obj[f]=el.value;});
+    obj.evidence=formEvidence.slice();   // 証憑（最大3つ）
+    if(!obj.title && !obj.date){ alert('タイトルか日付を入力してください。'); return; }
+    if(id){ const i=DATA.findIndex(x=>x.id===id); DATA[i]=obj; }
+    else DATA.push(obj);
+    save(); closeForm(); render();
+  }catch(e){
+    alert('保存中にエラーが発生しました：\n'+(e&&e.message)+'\n\n（このメッセージを開発者にお伝えください）');
+    console.error(e);
+  }
+}
+function deleteItem(){
+  const id=document.getElementById('f_id').value;
+  if(id && confirm('この予定を削除しますか？')){ DATA=DATA.filter(x=>x.id!==id); save(); closeForm(); render(); }
+}
+function closeForm(){ document.getElementById('overlay').classList.remove('open'); }
+document.getElementById('overlay').addEventListener('click',e=>{ if(e.target.id==='overlay') closeForm(); });
+
+/* ---------- 共有（旅程の書き出し） ---------- */
+function itineraryRows(){
+  // 日付ごとに予定を整理して返す [{date, items:[{it, label, time}]}]
+  const dates=uniqueDates();
+  return dates.map(d=>{
+    const items=DATA.filter(it=>itemDates(it).includes(d))
+      .sort((a,b)=>(a.start||'99').localeCompare(b.start||'99'))
+      .map(it=>{
+        let time=it.start?(it.start+(it.end?'-'+it.end:'')):'';
+        if(it.type==='hotel'){
+          if(it.date===d) time='IN '+(it.ci||'');
+          else if(it.codate===d) time='OUT '+(it.co||'');
+          else time='泊';
+        }
+        return {it,time:time.trim()};
+      });
+    return {date:d,items};
+  });
+}
+function copyItinerary(){
+  if(!DATA.length){ alert('予定がありません。'); return; }
+  let txt='【旅程・スケジュール】\n';
+  itineraryRows().forEach(row=>{
+    txt+=`\n■ ${fmtDate(row.date)}\n`;
+    row.items.forEach(({it,time})=>{
+      const det=detailLine(it).join(' / ');
+      txt+=` ${time?'['+time+'] ':''}${TYPE[it.type].label}：${it.title||''}\n`;
+      if(det) txt+=`    ${det}\n`;
+    });
+  });
+  const done=()=>alert('旅程をコピーしました。メールやLINE等に貼り付けて共有できます。');
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(done,()=>fallbackCopy(txt,done));
+  } else fallbackCopy(txt,done);
+}
+function fallbackCopy(txt,done){
+  const ta=document.createElement('textarea'); ta.value=txt;
+  ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta);
+  ta.select(); try{document.execCommand('copy');}catch(e){}
+  document.body.removeChild(ta); done&&done();
+}
+function printItinerary(){
+  if(!DATA.length){ alert('予定がありません。'); return; }
+  let rows='';
+  itineraryRows().forEach(row=>{
+    rows+=`<h2>${fmtDate(row.date)}</h2><table>`;
+    row.items.forEach(({it,time})=>{
+      const det=detailLine(it).join(' ／ ');
+      rows+=`<tr><td class="tm">${esc(time)||'—'}</td>
+        <td><span class="tag" style="background:${TYPE[it.type].hex}">${TYPE[it.type].label}</span>
+        <b>${esc(it.title)||''}</b>${det?'<div class="dt">'+esc(det)+'</div>':''}
+        ${it.memo?'<div class="mm">'+esc(it.memo).slice(0,300)+'</div>':''}</td></tr>`;
+    });
+    rows+='</table>';
+  });
+  const html=`<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><title>旅程表</title>
+    <style>
+      body{font-family:"Hiragino Kaku Gothic ProN","Meiryo",sans-serif;color:#222;margin:24px;}
+      h1{font-size:20px;border-bottom:2px solid #0d3b66;padding-bottom:6px;}
+      h2{font-size:15px;background:#eef3f8;padding:5px 8px;margin:18px 0 4px;border-left:4px solid #0d3b66;}
+      table{width:100%;border-collapse:collapse;margin-bottom:6px;}
+      td{border-bottom:1px solid #e0e6ec;padding:6px 8px;vertical-align:top;font-size:13px;}
+      td.tm{white-space:nowrap;width:90px;color:#345;font-weight:600;}
+      .tag{color:#fff;font-size:11px;border-radius:4px;padding:1px 6px;margin-right:6px;}
+      .dt{color:#52606d;font-size:12px;margin-top:2px;}
+      .mm{color:#90a4ae;font-size:11px;margin-top:2px;white-space:pre-wrap;}
+      @media print{ .noprint{display:none;} }
+    </style></head><body>
+    <h1>🧳 旅程・スケジュール</h1>${rows}
+    <p class="noprint" style="margin-top:16px;color:#888">
+      ※ このウィンドウで「印刷」→ 送信先を「PDFとして保存」にすると、PDFで共有できます。</p>
+    <script>window.onload=function(){setTimeout(function(){window.print();},300);}<\/script>
+    </body></html>`;
+  const w=window.open('','_blank');
+  if(!w){ alert('ポップアップがブロックされました。ブラウザの設定でこのページのポップアップを許可してください。'); return; }
+  w.document.write(html); w.document.close();
+}
+
+/* ---------- backup ---------- */
+function exportJSON(){
+  const blob=new Blob([JSON.stringify(DATA,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='隠岐出張スケジュール_'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+}
+function importJSON(e){
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{ try{
+    const arr=JSON.parse(r.result);
+    if(!Array.isArray(arr)) throw new Error('形式が不正です');
+    let replace=true;
+    if(DATA.length){
+      replace=confirm('取り込み方法を選んでください。\n\n［OK］現在のデータを すべて置き換える（PCのデータをこの端末に反映したいとき）\n［キャンセル］現在のデータに 追加する');
+    }
+    arr.forEach(o=>{ if(!o.id) o.id=uid(); });
+    if(replace){ DATA=arr; }
+    else { // id重複は上書き、無ければ追加（重複登録を防止）
+      const map=new Map(DATA.map(x=>[x.id,x]));
+      arr.forEach(o=>map.set(o.id,o));
+      DATA=[...map.values()];
+    }
+    save(); render(); alert((replace?'置き換え':'追加')+'：'+arr.length+'件を取り込みました。');
+  }catch(err){ alert('取込失敗：'+err.message); } };
+  r.readAsText(f);
+  e.target.value='';
+}
+
+/* ---------- 初期データ（隠岐出張 6/30）：データが空のときだけ自動投入 ---------- */
+const SEED=[
+  {id:'oki0630-01',type:'transport',title:'高速船 菱浦→西郷港',date:'2026-06-30',start:'08:14',end:'08:45',
+    mode:'高速船',from:'菱浦港',to:'西郷港',resv:'手配中',memo:''},
+  {id:'oki0630-02',type:'transport',title:'レンタカー 隠岐島内案内（一部）',date:'2026-06-30',start:'09:00',end:'11:30',
+    mode:'レンタカー',from:'西郷港',to:'',resv:'手配中',memo:'隠岐の島内を一部ご案内'},
+  {id:'oki0630-03',type:'transport',title:'レンタカー返却',date:'2026-06-30',start:'11:30',end:'12:00',
+    mode:'レンタカー',from:'',to:'西郷港',memo:''},
+  {id:'oki0630-04',type:'meal',title:'昼食',date:'2026-06-30',start:'12:00',end:'13:00',
+    shop:'',addr:'西郷港周辺',memo:'西郷港周辺で昼食'},
+  {id:'oki0630-05',type:'meeting',title:'隠岐ジオパーク（隠岐自然館）',date:'2026-06-30',start:'13:00',end:'',
+    company:'隠岐ジオパーク',purpose:'隠岐自然館 視察・打合せ',addr:'西郷港ターミナル併設 隠岐自然館',
+    memo:'アポ済。午前中は不可とのこと（午後13:00〜）。'},
+  {id:'oki0630-06',type:'transport',title:'フェリー 西郷港→七類港',date:'2026-06-30',start:'15:40',end:'18:05',
+    mode:'フェリー',from:'西郷港',to:'七類港',resv:'手配中',memo:''},
+  {id:'oki0630-07',type:'transport',title:'タクシー 七類港→米子空港',date:'2026-06-30',start:'18:05',end:'',
+    mode:'タクシー／車',from:'七類港',to:'米子空港',memo:'七類港からタクシーで米子空港へ移動'},
+];
+
+// 起動：まず初期データを描画 → その後 保存データを読み込んで反映
+// （file:// で IndexedDB が応答しない環境でも、予定が必ず表示されるようにする）
+function seedCopy(){ return JSON.parse(JSON.stringify(SEED)); }
+DATA = seedCopy();
+render();                                   // ① ベース予定を必ず先に描画（空表示を防ぐ）
+(async()=>{
+  try{
+    // 保存先が固まる環境に備えて 2.5 秒でタイムアウト（その場合はベース予定のまま）
+    const saved = await Promise.race([
+      loadData(),
+      new Promise(r=>setTimeout(()=>r('__timeout__'), 2500))
+    ]);
+    if(saved==='__timeout__') return;
+    if(Array.isArray(saved) && saved.length){
+      // ② ベース予定（最新版）は常に表示。画面から追加した予定（シードに無いid）だけ統合
+      const seedIds = new Set(SEED.map(s=>s.id));
+      const extras = saved.filter(it=> it && it.id && !seedIds.has(it.id));
+      DATA = [...seedCopy(), ...extras];
+      render();
+    }
+    save();                                  // ③ 統合結果を保存（追加分が次回も残る）
+  }catch(e){ console.error(e); }
+})();
+</script>
+</body>
+</html>
