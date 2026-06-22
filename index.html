@@ -387,6 +387,9 @@ function renderTable(){
   });
   minH=Math.max(0,minH); maxH=Math.min(24,maxH);
   const rows=maxH-minH, gridH=rows*HOURPX;
+  // 終日帯（ホテル等）の高さを「軸＋全列」で統一し、時刻と帯のズレを防ぐ
+  const maxAllday=Math.max(0,...dates.map(d=>DATA.filter(it=>!it.start && itemDates(it).includes(d)).length));
+  const alldayH=maxAllday>0 ? maxAllday*26+6 : 8;
 
   // ---- ヘッダ（日付） ----
   let head=`<div class="cal-headrow"><div class="ax axhdr"></div>`;
@@ -394,7 +397,7 @@ function renderTable(){
   head+=`</div>`;
 
   // ---- 本体 ----
-  let body=`<div class="cal"><div class="cal-axis">`;
+  let body=`<div class="cal"><div class="cal-axis"><div style="height:${alldayH}px"></div>`;
   for(let h=minH;h<maxH;h++) body+=`<div class="ah">${String(h).padStart(2,'0')}:00</div>`;
   body+=`</div>`;
 
@@ -402,7 +405,7 @@ function renderTable(){
     body+=`<div class="cal-col">`;
     // 終日（ホテル等、時刻なし）
     const allday=DATA.filter(it=>!it.start && itemDates(it).includes(d));
-    body+=`<div class="cal-allday">`;
+    body+=`<div class="cal-allday" style="height:${alldayH}px">`;
     allday.forEach(it=>{
       let tag = it.type==='hotel' ? (it.date===d?'IN':(it.codate===d?'OUT':'泊')) : TYPE[it.type].label;
       body+=`<div class="ev" style="background:${TYPE[it.type].hex}" onclick="editItem('${it.id}')">
@@ -1063,12 +1066,12 @@ const SEED=[
   {id:'oki0627-03',type:'transport',title:'レンタカー ピックアップ',date:'2026-06-27',start:'10:00',end:'',
     mode:'レンタカー',resv:'予約済',
     memo:'予約コード：R26062138／車のクラス：普通車／期間：6/27 9:30〜6/28 15:00／料金：17,500円'},
-  {id:'oki-okiplaza',type:'hotel',title:'隠岐プラザホテル',date:'2026-06-27',codate:'2026-06-28',
+  {id:'oki-okiplaza',type:'hotel',title:'隠岐プラザホテル',date:'2026-06-27',codate:'2026-06-28',ci:'17:00',co:'09:00',
     hotel:'隠岐プラザホテル',addr:'〒685-0015 島根県隠岐郡隠岐の島町港町11-1',phone:'08512-2-0111',
     memo:'FAX:08512-2-0521'},
-  {id:'oki-ento',type:'hotel',title:'Entô（2泊）',date:'2026-06-28',codate:'2026-06-30',ci:'15:00',co:'10:00',
+  {id:'oki-ento',type:'hotel',title:'Entô（2泊）',date:'2026-06-28',codate:'2026-06-30',ci:'19:00',co:'07:30',
     hotel:'Entô',addr:'海士町（中ノ島・菱浦港すぐ）',
-    memo:'【30日前まで 連泊10%off】朝食付きプラン／到着予定15:00／2泊（6/28(日)IN〜6/30(火)OUT）。6/30は高速船(菱浦8:14発)に合わせ早めにチェックアウト'},
+    memo:'【30日前まで 連泊10%off】朝食付きプラン／2泊（6/28(日)IN〜6/30(火)OUT）。6/30は高速船(菱浦8:14発)に合わせ早めにチェックアウト'},
   {id:'oki0629-01',type:'meeting',title:'応用藻類研究所',date:'2026-06-29',start:'10:30',end:'17:00',
     company:'応用藻類研究所',contact:'岡部',memo:''},
   {id:'oki0630-01',type:'transport',title:'高速船 菱浦→西郷港',date:'2026-06-30',start:'08:14',end:'08:45',
